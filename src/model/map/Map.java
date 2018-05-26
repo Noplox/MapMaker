@@ -1,5 +1,7 @@
 package model.map;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,17 +9,20 @@ import java.util.List;
 public class Map implements Serializable {
     private final List<Level> levels;
     private final List<Route> routes;
+    private final List<Elevator> elevators;
     private String name;
 
     public Map(String name) {
         this.levels = new ArrayList<>();
         this.routes = new ArrayList<>();
+        this.elevators = new ArrayList<>();
         this.name = name;
     }
 
-    public Map(List<Level> levels, List<Route> routes) {
+    public Map(List<Level> levels, List<Route> routes, List<Elevator> elevators) {
         this.levels = levels;
         this.routes = routes;
+        this.elevators = elevators;
     }
 
     public List<Level> getLevels() {
@@ -34,6 +39,14 @@ public class Map implements Serializable {
     
     public void addRoute(Route route) {
         this.routes.add(route);
+    }
+    
+    public List<Elevator> getElevators() {
+        return elevators;
+    }
+    
+    public void addElevator(Elevator elevator) {
+        this.elevators.add(elevator);
     }
 
     public String getName() {

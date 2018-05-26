@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package view;
 
 import controller.Controller;
@@ -11,32 +6,55 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.io.File;
 import java.util.Vector;
+import java.util.logging.Logger;
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
 import model.Model;
+import model.map.Level;
+import model.map.Point2d;
 
 /**
  *
  * @author John
  */
-public class MapCreator extends JFrame implements ViewInterface{
+public class MapCreator extends JFrame implements ViewInterface, MouseMotionListener, MouseListener, MouseWheelListener {
     public static final String APP_NAME = "Map creator";
+    public static final int TICK_RATE = 60;
+
+    private class LevelSelectListener implements ActionListener{
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            levelSelected();
+        }
+        
+    }
     
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -51,9 +69,13 @@ public class MapCreator extends JFrame implements ViewInterface{
     public MapCreator() {
         this.levelVector = new Vector();
         this.controller = new Controller(this);
-        this.canvas = new MapCanvas(controller.getModel());
+        this.canvas = new MapCanvas(controller.getModel(), this);
+        this.levelSelectListener = new LevelSelectListener();
+        this.coordinateMapper = CoordinateMapper.getInstance();
         initComponents();
         newMap();
+        Thread tickerThread = new Thread(ticker);
+        tickerThread.start();
     }
     
     private void initComponents() {
@@ -150,7 +172,6 @@ public class MapCreator extends JFrame implements ViewInterface{
         
         saveMapButton.setVerticalTextPosition(AbstractButton.CENTER);
         saveMapButton.setHorizontalTextPosition(AbstractButton.CENTER);
-        saveMapButton.setEnabled(false);
         saveMapButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -172,7 +193,7 @@ public class MapCreator extends JFrame implements ViewInterface{
         bluetoothBeaconRadio.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                elementSelected(e, Element.BEACON);
+                elementSelected(Element.BEACON);
             }
             
         });
@@ -189,7 +210,7 @@ public class MapCreator extends JFrame implements ViewInterface{
         elevatorRadio.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                elementSelected(e, Element.ELEVATOR);
+                elementSelected(Element.ELEVATOR);
             }
             
         });
@@ -206,7 +227,7 @@ public class MapCreator extends JFrame implements ViewInterface{
         obstacleRadio.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                elementSelected(e, Element.OBSTACLE);
+                elementSelected(Element.OBSTACLE);
             }
             
         });
@@ -223,7 +244,7 @@ public class MapCreator extends JFrame implements ViewInterface{
         pointOfInterestRadio.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                elementSelected(e, Element.POINT_OF_INTEREST);
+                elementSelected(Element.POINT_OF_INTEREST);
             }
             
         });
@@ -240,7 +261,7 @@ public class MapCreator extends JFrame implements ViewInterface{
         routeRadio.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                elementSelected(e, Element.ROUTE);
+                elementSelected(Element.ROUTE);
             }
             
         });
@@ -257,7 +278,7 @@ public class MapCreator extends JFrame implements ViewInterface{
         staircaseRadio.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                elementSelected(e, Element.STAIRS);
+                elementSelected(Element.STAIRS);
             }
             
         });
@@ -278,13 +299,7 @@ public class MapCreator extends JFrame implements ViewInterface{
         
         levelComboBox.setFocusable(false);
         levelComboBox.setAlignmentX(Component.CENTER_ALIGNMENT);
-        levelComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                levelSelected(e);
-            }
-            
-        });
+        levelComboBox.addActionListener(levelSelectListener);
         gc.gridy++;
         sidebar.add(levelComboBox, gc);
         
@@ -314,6 +329,13 @@ public class MapCreator extends JFrame implements ViewInterface{
         bottomBar.add(x, gc);
         
         gc.gridx++;
+        xNumber.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                    canvasAction(1);
+            }
+        });
+        
         bottomBar.add(xNumber, gc);
         
         y.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -321,22 +343,49 @@ public class MapCreator extends JFrame implements ViewInterface{
         bottomBar.add(y, gc);
 
         gc.gridx++;
+        yNumber.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                    canvasAction(1);
+                    xNumber.requestFocus();
+            }
+        });
+        
         bottomBar.add(yNumber, gc);
         
         gc.gridx++;
         bottomBar.add(new JLabel(), gc);
     }
     
-    private void elementSelected(java.awt.event.ActionEvent evt, Element element) {                                         
+    private void elementSelected(Element element) {                                         
         controller.elementSelected(element);
     }
     
-    private void levelSelected(java.awt.event.ActionEvent evt) {
-        // TODO add your handling code here:
+    private void levelSelected() {
+        LevelComboItem lvl = (LevelComboItem)levelComboBox.getSelectedItem();
+//        //lvl is null when the method is invoked due to clearing the comboBox when refreshing the view
+//        if(lvl != null && !controller.getSelectedLevel().getName().equals(lvl.getKey())) {
+            controller.selectLevel(lvl.getKey());
+//        }
     }
     
     private void addLevel() {
-        // TODO add your handling code here:
+        JTextField levelName = new JTextField();
+        JTextField floorHeight = new JTextField();
+        final JComponent[] inputs = new JComponent[] {
+            new JLabel("Name"),
+            levelName,
+            new JLabel("floorHeight"),
+            floorHeight
+        };
+        int result = JOptionPane.showConfirmDialog(this, inputs, "Add level", JOptionPane.PLAIN_MESSAGE);
+        if(result == JOptionPane.OK_OPTION) {
+            try {
+                String name = levelName.getText();
+                double height = Double.parseDouble(floorHeight.getText());
+                controller.addLevel(name, height);
+            } catch(NumberFormatException e) {}
+        }
     }
     
     private void newMap() {
@@ -344,11 +393,38 @@ public class MapCreator extends JFrame implements ViewInterface{
     }
     
     private void loadMap() {
-        // TODO add your handling code here:
+        JFileChooser c = new JFileChooser();
+        c.setFileFilter(new FileFilter() {
+
+            public String getDescription() {
+                return "MapCreator files (*.map)";
+            }
+
+            public boolean accept(File f) {
+                if (f.isDirectory()) {
+                    return true;
+                } else {
+                    String filename = f.getName().toLowerCase();
+                    return filename.endsWith(".map");
+                }
+            }
+         });
+        int retVal = c.showOpenDialog(this);
+        if (retVal == JFileChooser.APPROVE_OPTION) {
+            controller.loadMap(c.getCurrentDirectory().toString(), c.getSelectedFile().getName());
+        }
     }
     
     private void saveMap() {
-        // TODO add your handling code here:
+        JFileChooser c = new JFileChooser();
+        int retVal = c.showSaveDialog(this);
+        if(retVal == JFileChooser.APPROVE_OPTION) {
+            String filename = c.getSelectedFile().getName();
+            if(!filename.endsWith(".map")) {
+                filename += ".map";
+            }
+            controller.saveMap(c.getCurrentDirectory().toString(), c.getSelectedFile().getName());
+        }
     }
     
     private void importImage() {
@@ -383,20 +459,222 @@ public class MapCreator extends JFrame implements ViewInterface{
             int result = JOptionPane.showConfirmDialog(this, inputs, "Input dimensions", JOptionPane.PLAIN_MESSAGE);
             if(result == JOptionPane.OK_OPTION) {
                 try {
-                    int x = Integer.parseInt(width.getText());
-                    int y = Integer.parseInt(height.getText());
+                    double x = Double.parseDouble(width.getText());
+                    double y = Double.parseDouble(height.getText());
                     controller.importImage(c.getCurrentDirectory().toString(), c.getSelectedFile().getName(), x, y);
-                } catch(NumberFormatException e) {}
+                    //tick();
+                } catch(NumberFormatException e) {
+                    JOptionPane.showMessageDialog(this, "Illegal arguments passed", "Image import error", JOptionPane.ERROR_MESSAGE);
+                }
             }
             
             
         }
     }
     
-    @Override
-    public void refresh(Model model) {
+    private void canvasAction(int clicks) {
+        try {
+            double x = Double.parseDouble(xNumber.getText());
+            double y = Double.parseDouble(yNumber.getText());
+            Point2d clickPosition = new Point2d(x, y);
+            //Different behaviours needed for different elements.
+            //For example, when adding POIs, a dialog should query the user for POI name and description
+            //for elevators, the floors accessed by it should be defined
+            //same for staircases, except they require one floor above and/or below
+            //for beacons the user needs to enter beacon data (uuid, major/minor, tx power...)
+            Controller.Element selectedElement = controller.getSelectedElement();
+            switch (selectedElement) {
+                case BEACON: {
+                    JTextField uuid = new JTextField();
+                    JTextField majorFld = new JTextField();
+                    JTextField minorFld = new JTextField();
+                    JTextField txPower = new JTextField();
+                    JTextField height = new JTextField();
+                    final JComponent[] inputs = new JComponent[] {
+                        new JLabel("UUID"),
+                        uuid,
+                        new JLabel("major"),
+                        majorFld,
+                        new JLabel("minor"),
+                        minorFld,
+                        new JLabel("Transmission power"),
+                        txPower,
+                        new JLabel("Height"),
+                        height
+                    };
+                    int result = JOptionPane.showConfirmDialog(this, inputs, "Beacon info", JOptionPane.PLAIN_MESSAGE);
+                    if(result == JOptionPane.OK_OPTION) {
+                        try {
+                            double h = Double.parseDouble(height.getText());
+                            int major = Integer.parseInt(majorFld.getText());
+                            int minor = Integer.parseInt(minorFld.getText());
+                            int tx = Integer.parseInt(txPower.getText());
+                            controller.addBeacon(clickPosition, uuid.getText(), major, minor, h, tx);
+                        } catch(IllegalArgumentException e) {
+                            //show error dialog
+                            JOptionPane.showMessageDialog(this, "Illegal arguments passed", "Beacon creation error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                    break;
+                }
+
+                case OBSTACLE: {
+                    if(clicks == 2) {
+                        controller.finalizeObstacle(clickPosition);
+                    }
+                    else {
+                        controller.addObstaclePoint(clickPosition);
+                    }
+                    break;
+                }
+
+                case ELEVATOR: {
+                    ElevatorDialog dialog = new ElevatorDialog(this, controller, clickPosition);
+                    dialog.setVisible(true);
+                    break;
+                }
+
+                case POINT_OF_INTEREST: {
+                    JTextField name = new JTextField();
+                    JTextArea description = new JTextArea();
+                    final JComponent[] inputs = new JComponent[] {
+                        new JLabel("Name"),
+                        name,
+                        new JLabel("Description"),
+                        description
+                    };
+                    int result = JOptionPane.showConfirmDialog(this, inputs, "Point of interest info", JOptionPane.PLAIN_MESSAGE);
+                    if(result == JOptionPane.OK_OPTION) {
+                        controller.addPOI(clickPosition, name.getText(), description.getText());
+                    }
+                    break;
+                }
+                
+                case ROUTE: {
+                    if(clicks == 2) {
+                        Level[] nextLevels = controller.routeLevelFinish(clickPosition);
+                        if(nextLevels.length != 0) {
+                            //Show dialog with options on which level to continue route creation
+                            Level chosenLevel = (Level)JOptionPane.showInputDialog(
+                                    this, 
+                                    "Select next level for route",
+                                    "Level selection",
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null,
+                                    nextLevels,
+                                    controller.getCurrentLevel());
+                            if(chosenLevel != null) {
+                                //continue switch current level and continue route on chosenLevel
+                                controller.continueRouteOnLevel(chosenLevel, clickPosition);
+                            }
+                        } else {
+                            //Show dialog with route name textbox and finalize route
+                            JTextField name = new JTextField();
+                            final JComponent[] inputs = new JComponent[] {
+                                new JLabel("Route name"),
+                                name,
+                            };
+                            int result = JOptionPane.showConfirmDialog(this, inputs, "Route name", JOptionPane.PLAIN_MESSAGE);
+                            if(result == JOptionPane.OK_OPTION) {
+                                controller.finalizeRoute(clickPosition, name.getText());
+                            }
+                        }
+                    }
+                    else {
+                        controller.addRoutePoint(clickPosition);
+                    }
+                    break;
+                }
+
+                case STAIRS: {
+                    //POSSIBLE IMPROVEMENT: if clicked on already existing staircase, edit that one
+                    StairsDialog dialog = new StairsDialog(this, controller, clickPosition);
+                    dialog.setVisible(true);
+                    break;
+                }
+            }
+        } catch(NumberFormatException ex) {}
+    }
+    
+    private void changeUpperFloorComboBox() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
+    @Override
+    public void refresh(Model model) {
+        levelComboBox.removeActionListener(levelSelectListener);
+        levelComboBox.removeAllItems();
+        int i = 0;
+        for(Level cur : model.getAllLevels()) {
+            levelComboBox.addItem(new LevelComboItem(cur));
+            if(cur == model.getCurrentLevel()) {
+                levelComboBox.setSelectedIndex(i);
+            }
+            i++;
+        }
+        levelComboBox.addActionListener(levelSelectListener);
+        canvas.setModel(model);
+        setTitle(APP_NAME + " - " + controller.getMap().getName());
+    }
+    
+    public void tick() {
+        canvas.prepareModel();
+        canvas.repaint();
+    }
+    
+    // <editor-fold desc="Mouse listeners">
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        if(mouseLocation != null) {
+            Point translation = new Point();
+            translation.x = e.getPoint().x - mouseLocation.x;
+            translation.y = e.getPoint().y - mouseLocation.y;
+            coordinateMapper.translate(translation);
+        }
+        mouseLocation = e.getPoint();
+        //tick();
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mouseLocation = e.getPoint();
+        Point2d point = coordinateMapper.mapPoint(mouseLocation);
+
+        
+        
+        xNumber.setText(String.format("%1$,.2f", point.getX()));
+        yNumber.setText(String.format("%1$,.2f", point.getY()));
+        controller.mouseMoved(point);
+    }
+    
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        canvasAction(e.getClickCount());
+    }
+    
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        if(e.getWheelRotation() != 0) {
+            if(e.getWheelRotation() > 0) {
+                coordinateMapper.zoomOut(10);
+            } else {
+                coordinateMapper.zoomIn(10);
+            }    
+        }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {}
+
+    @Override
+    public void mouseReleased(MouseEvent e) {}
+
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+
+    @Override
+    public void mouseExited(MouseEvent e) {}
+    // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="Graphical elements">
     private ButtonGroup placementButtonGroup;
@@ -420,5 +698,21 @@ public class MapCreator extends JFrame implements ViewInterface{
     // </editor-fold>
     
     private final Controller controller;
-    private MapCanvas canvas;
+    private final MapCanvas canvas;
+    private final LevelSelectListener levelSelectListener;
+    private final CoordinateMapper coordinateMapper;
+    private Point mouseLocation;
+    private final Runnable ticker = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                while(true) {
+                    Thread.sleep(1000/TICK_RATE);
+                    tick();
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MapCreator.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            }
+        }
+    };
 }

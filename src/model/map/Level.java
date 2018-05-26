@@ -1,28 +1,50 @@
 package model.map;
 
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.imageio.ImageIO;
 
 
 
 public class Level implements Serializable {
     
-    private class ImageContainer {
-        public Image image;
-        public String path;
-        public String filename;
-        public int width, height;
+    public class ImageContainer implements Serializable {
+        public transient Image image;
+        public double width, height;
         
         public ImageContainer(){}
 
-        public ImageContainer(Image image, String path, String filename, int width, int height) {
+        public ImageContainer(Image image, double width, double height) {
             this.image = image;
-            this.path = path;
-            this.filename = filename;
             this.width = width;
             this.height = height;
+        }
+        
+        private void writeObject(ObjectOutputStream out) throws IOException {
+            out.defaultWriteObject();
+            if(image != null) {
+                out.writeInt(1);
+//                BufferedImage bufImage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+//                Graphics2D g = bufImage.createGraphics();
+//                g.drawImage(image, 0, 0, null);
+//                g.dispose();
+                ImageIO.write((BufferedImage)image, "png", out);
+            }
+        }
+        
+        private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+            in.defaultReadObject();
+            final int imageCnt = in.readInt();
+            if(imageCnt == 1) {
+                image = ImageIO.read(in);
+            }
         }
     }
     
@@ -30,7 +52,6 @@ public class Level implements Serializable {
     private List<Obstacle> obstacles;
     private List<PointOfInterest> pointsOfInterest;
     private List<Staircase> stairs;
-    private List<Elevator> elevators;
     private List<BluetoothBeacon> bluetoothBeacons;
     private String name;
     //variable to store floorplan in jpg/png
@@ -41,7 +62,6 @@ public class Level implements Serializable {
         obstacles = new ArrayList<>();
         pointsOfInterest = new ArrayList<>();
         stairs = new ArrayList<>();
-        elevators = new ArrayList<>();
         bluetoothBeacons = new ArrayList<>();
     }
 
@@ -51,10 +71,9 @@ public class Level implements Serializable {
         obstacles = new ArrayList<>();
         pointsOfInterest = new ArrayList<>();
         stairs = new ArrayList<>();
-        elevators = new ArrayList<>();
         bluetoothBeacons = new ArrayList<>();
     }
-
+    
     public double getFloorHeight() {
         return floorHeight;
     }
@@ -93,16 +112,6 @@ public class Level implements Serializable {
         return retVal;
     }
     
-    public void addElevator(Elevator e) {
-        elevators.add(e);
-    }
-    
-    public Elevator[] getElevators() {
-        Elevator[] retVal = new Elevator[elevators.size()];
-        retVal = elevators.toArray(retVal);
-        return retVal;
-    }
-    
     public void addBluetoothBeacon(BluetoothBeacon b) {
         bluetoothBeacons.add(b);
     }
@@ -113,7 +122,24 @@ public class Level implements Serializable {
         return retVal;
     }
 
-    public void addImage(Image levelImage, String path, String fileName, int width, int height) {
-        image = new ImageContainer(levelImage, path, fileName, width, height);
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public void addImage(Image levelImage, double width, double height) {
+        image = new ImageContainer(levelImage, width, height);
+    }
+    
+    public ImageContainer getImage() {
+        return image;
+    }
+    
+    @Override
+    public String toString() {
+        return name;
     }
 }

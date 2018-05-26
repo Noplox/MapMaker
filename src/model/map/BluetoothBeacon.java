@@ -7,11 +7,14 @@ public class BluetoothBeacon implements Serializable {
 
     private Location location;
     private UUID id;
+    private int major, minor;
     private int txPower;
 
-    public BluetoothBeacon(Location location, UUID id, int txPower) {
+    public BluetoothBeacon(Location location, UUID id, int major, int minor, int txPower) {
         this.location = location;
         this.id = id;
+        this.major = major;
+        this.minor = minor;
         this.txPower = txPower;
     }
 
@@ -32,6 +35,22 @@ public class BluetoothBeacon implements Serializable {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public int getMajor() {
+        return major;
+    }
+
+    public void setMajor(int major) {
+        this.major = major;
+    }
+
+    public int getMinor() {
+        return minor;
+    }
+
+    public void setMinor(int minor) {
+        this.minor = minor;
     }
 
     public int getTxPower() {
