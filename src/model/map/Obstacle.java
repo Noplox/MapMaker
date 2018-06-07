@@ -7,8 +7,8 @@ import java.util.List;
 /**
  * Class that defines obstacles as a polygon lying on the plane of the floor it's on.
  * */
-public class Obstacle implements Serializable {
-    private List<Point2d> points;
+public class Obstacle extends MapElement implements Serializable {
+    private final List<Point2d> points;
 
     public Obstacle() {
         points = new ArrayList<>();
@@ -23,4 +23,11 @@ public class Obstacle implements Serializable {
         retVal = points.toArray(retVal);
         return retVal;
     }
+
+    @Override
+    public String toString() {
+        return "Obstacle" + " " + points;
+    }
+    
+    
 }

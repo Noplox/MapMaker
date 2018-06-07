@@ -17,11 +17,14 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import model.Model;
 import model.map.*;
+import view.CoordinateMapper;
 import view.ViewInterface;
 
 public class Controller {
     
-    public enum Element {BEACON, OBSTACLE, STAIRS, ELEVATOR, POINT_OF_INTEREST, ROUTE};
+    public enum Element {
+        BEACON, OBSTACLE, STAIRS, ELEVATOR, POINT_OF_INTEREST, ROUTE, DELETE
+    };
 
     public Controller(ViewInterface view) {
         this.view = view;
@@ -72,10 +75,10 @@ public class Controller {
         return model.getCurrentLevel();
     }
     
-    public void importImage(String path, String fileName, double width, double height) {
+    public void importImage(String imagePath, Point2d firstCoordinate, Point2d lastCoordinate) {
         try {
-            Image levelImage = ImageIO.read(new File(path + "\\" + fileName));
-            model.addLevelImage(levelImage, width, height);
+            Image levelImage = ImageIO.read(new File(imagePath));
+            model.addLevelImage(levelImage, firstCoordinate, lastCoordinate);
             model.clearTempObjects();
         } catch (IOException ex) {
             Logger.getLogger(Controller.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
@@ -116,8 +119,16 @@ public class Controller {
         view.refresh(model);
     }
     
-    public void addPOI(Point2d clickPosition, String name, String description) {
-        model.addPOI(clickPosition, name, description);
+    public void addPOI(Point2d clickPosition, String name, String description, String path) {
+        Image POIImage = null;
+        if(!"".equals(path) && path != null) {
+            try {
+                POIImage = ImageIO.read(new File(path));
+            } catch (IOException ex) {
+                POIImage = null;
+            }
+        }
+        model.addPOI(clickPosition, name, description, POIImage);
     }
     
     public void addBeacon(Point2d clickPosition, String uuid, int major, int minor, double height, int txPower) {
@@ -203,6 +214,116 @@ public class Controller {
     
     public void addElevator(Point2d location, List<Level> selectedLevels) {
         model.addElevator(new Elevator(location, selectedLevels));
+    }
+
+    public void deleteElement(MapElement toDelete) {
+        model.getCurrentLevel().getBluetoothBeacons().remove(toDelete);
+        model.getElevators().remove(toDelete);
+        model.getCurrentLevel().getPointsOfInterest().remove(toDelete);
+        model.getCurrentLevel().getStaircases().remove(toDelete);
+        model.getRoutes().remove(toDelete);
+        model.getCurrentLevel().getObstacles().remove(toDelete);
+    }
+    
+    public MapElement findElement(Point2d clickPosition) {
+        final double detectionThreshold = 0.1d;
+        for(BluetoothBeacon cur : model.getCurrentLevel().getBluetoothBeacons()) {
+            Point2d bbLocation = new Point2d(cur.getLocation().getX(), cur.getLocation().getY());
+            if(isInRadius(bbLocation, clickPosition, detectionThreshold)) {
+                return cur;
+            }
+        }
+        
+        for(Elevator cur : model.getElevators()) {
+            if(cur.getLevels().contains(model.getCurrentLevel()) &&
+                    isInRadius(cur.getLocation(), clickPosition, detectionThreshold)) {
+                return cur;
+            }
+        }
+        
+        for(PointOfInterest cur : model.getCurrentLevel().getPointsOfInterest()) {
+            if(isInRadius(cur.getLocation(), clickPosition, detectionThreshold)) {
+                return cur;
+            }
+        }
+        
+        for(Staircase cur : model.getCurrentLevel().getStaircases()) {
+            if(isInRadius(cur.getLocation(), clickPosition, detectionThreshold)) {
+                return cur;
+            }
+        }
+        
+        MapElement cur = findRoute(clickPosition, detectionThreshold);
+        if(cur != null) {
+            return cur;
+        }
+        
+        cur = findObstacle(clickPosition, detectionThreshold);
+        if(cur != null) {
+            return cur;
+        }
+        
+        return null;
+    }
+    
+    private Route findRoute(Point2d clickPosition, double detectionThreshold) {
+        for(Route cur : model.getRoutes()) {
+            Checkpoint[] checkpoints = cur.getCheckpoints();
+            for(int i = 1; i < checkpoints.length; i++) {
+                if(checkpoints[i - 1].getLevel() == model.getCurrentLevel() &&
+                        checkpoints[i].getLevel() == model.getCurrentLevel()) {
+                    if(isNearLineSegment(
+                            checkpoints[i - 1].getLocation(),
+                            checkpoints[i].getLocation(),
+                            clickPosition,
+                            detectionThreshold)) {
+                        return cur;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
+    private Obstacle findObstacle(Point2d clickPosition, double detectionThreshold) {
+        for(Obstacle cur : model.getCurrentLevel().getObstacles()) {
+            if(isInPolygon(cur.getPoints(), clickPosition)) {
+                return cur;
+            }
+        }
+        
+        return null;
+    }
+    
+    private boolean isNearLineSegment(Point2d seg1, Point2d seg2, Point2d location, double detectionThreshold) {
+        double a = CoordinateMapper.pointDistance(seg2, location);
+        double b = CoordinateMapper.pointDistance(seg1, location);
+        double c = CoordinateMapper.pointDistance(seg1, seg2);
+        if(a + b <= c + (detectionThreshold / 4)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isInPolygon(Point2d[] points, Point2d clickPosition) {
+        int j = points.length - 1;
+        boolean oddNodes = false;
+
+        for (int i = 0; i < points.length; i++)
+        {
+            if (points[i].y < clickPosition.y && points[j].y >= clickPosition.y ||
+                points[j].y < clickPosition.y && points[i].y >= clickPosition.y)
+            {
+                if (points[i].x +
+                    (clickPosition.y - points[i].y)/(points[j].y - points[i].y)*(points[j].x - points[i].x) < clickPosition.x)
+                {
+                    oddNodes = !oddNodes;
+                }
+            }
+            j = i;
+        }
+
+        return oddNodes;
     }
 
     private boolean isInRadius(Point2d location1, Point2d location2, double radius) {

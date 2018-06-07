@@ -17,24 +17,20 @@ public class Level implements Serializable {
     
     public class ImageContainer implements Serializable {
         public transient Image image;
-        public double width, height;
+        public Point2d firstCoordinate, lastCoordinate;
         
         public ImageContainer(){}
 
-        public ImageContainer(Image image, double width, double height) {
+        public ImageContainer(Image image, Point2d firstCoordinate, Point2d lastCoordinate) {
             this.image = image;
-            this.width = width;
-            this.height = height;
+            this.firstCoordinate = firstCoordinate;
+            this.lastCoordinate = lastCoordinate;
         }
         
         private void writeObject(ObjectOutputStream out) throws IOException {
             out.defaultWriteObject();
             if(image != null) {
                 out.writeInt(1);
-//                BufferedImage bufImage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-//                Graphics2D g = bufImage.createGraphics();
-//                g.drawImage(image, 0, 0, null);
-//                g.dispose();
                 ImageIO.write((BufferedImage)image, "png", out);
             }
         }
@@ -56,7 +52,7 @@ public class Level implements Serializable {
     private String name;
     //variable to store floorplan in jpg/png
     private ImageContainer image;
-
+/*
     public Level(String name) {
         this.name = name;
         obstacles = new ArrayList<>();
@@ -64,7 +60,7 @@ public class Level implements Serializable {
         stairs = new ArrayList<>();
         bluetoothBeacons = new ArrayList<>();
     }
-
+*/
     public Level(String name, double floorHeight) {
         this.name = name;
         this.floorHeight = floorHeight;
@@ -86,40 +82,32 @@ public class Level implements Serializable {
         obstacles.add(o);
     }
     
-    public Obstacle[] getObstacles() {
-        Obstacle[] retVal = new Obstacle[obstacles.size()];
-        retVal = obstacles.toArray(retVal);
-        return retVal;
+    public List<Obstacle> getObstacles() {
+        return obstacles;
     }
     
     public void addPointOfInterest(PointOfInterest p) {
         pointsOfInterest.add(p);
     }
     
-    public PointOfInterest[] getPointsOfInterest() {
-        PointOfInterest[] retVal = new PointOfInterest[pointsOfInterest.size()];
-        retVal = pointsOfInterest.toArray(retVal);
-        return retVal;
+    public List<PointOfInterest> getPointsOfInterest() {
+        return pointsOfInterest;
     }
     
     public void addStaircase(Staircase s) {
         stairs.add(s);
     }
     
-    public Staircase[] getStaircases() {
-        Staircase[] retVal = new Staircase[stairs.size()];
-        retVal = stairs.toArray(retVal);
-        return retVal;
+    public List<Staircase> getStaircases() {
+        return stairs;
     }
     
     public void addBluetoothBeacon(BluetoothBeacon b) {
         bluetoothBeacons.add(b);
     }
     
-    public BluetoothBeacon[] getBluetoothBeacons() {
-        BluetoothBeacon[] retVal = new BluetoothBeacon[bluetoothBeacons.size()];
-        retVal = bluetoothBeacons.toArray(retVal);
-        return retVal;
+    public List<BluetoothBeacon> getBluetoothBeacons() {
+        return bluetoothBeacons;
     }
 
     public String getName() {
@@ -130,8 +118,8 @@ public class Level implements Serializable {
         this.name = name;
     }
     
-    public void addImage(Image levelImage, double width, double height) {
-        image = new ImageContainer(levelImage, width, height);
+    public void addImage(Image levelImage, Point2d firstCoordinate, Point2d lastCoordinate) {
+        image = new ImageContainer(levelImage, firstCoordinate, lastCoordinate);
     }
     
     public ImageContainer getImage() {

@@ -21,7 +21,7 @@ import model.map.Point2d;
 public class ElevatorDialog extends JDialog {
 
     public ElevatorDialog(Frame owner, Controller controller, Point2d elevatorPosition) {
-        super(owner, "Select levels to which the staircase leads", true);
+        super(owner, "Select levels to which the elevator leads", true);
         this.controller = controller;
         Level[] allLevels = controller.getAllLevels();
         setLayout(new GridBagLayout());

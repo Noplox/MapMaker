@@ -36,8 +36,8 @@ public class Model {
         return map.getLevels();
     }
     
-    public void addLevelImage(Image levelImage, double width, double height) {
-        currentLevel.addImage(levelImage, width, height);
+    public void addLevelImage(Image levelImage, Point2d firstCoordinate, Point2d lastCoordinate) {
+        currentLevel.addImage(levelImage, firstCoordinate, lastCoordinate);
     }
 
     public void addLevel(String name, double height) {
@@ -99,8 +99,8 @@ public class Model {
         }
     }
     
-    public void addPOI(Point2d clickPosition, String name, String description) {
-        currentLevel.addPointOfInterest(new PointOfInterest(clickPosition, name, description));
+    public void addPOI(Point2d clickPosition, String name, String description, Image POIImage) {
+        currentLevel.addPointOfInterest(new PointOfInterest(clickPosition, name, description, POIImage));
     }
     
     public void addBeacon(Point2d clickPosition, UUID uuid, int major, int minor, double height, int txPower) {
@@ -113,8 +113,12 @@ public class Model {
         return newRoute;
     }
      
-    public Elevator[] getElevators() {
-        return map.getElevators().toArray(new Elevator[0]);
+    public List<Elevator> getElevators() {
+        return map.getElevators();
+    }
+    
+    public List<Route>getRoutes() {
+        return map.getRoutes();
     }
     
     public void addElevator(Elevator elevator) {

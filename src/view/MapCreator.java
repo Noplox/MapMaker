@@ -34,6 +34,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import model.Model;
 import model.map.Level;
@@ -87,6 +88,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
         pointOfInterestRadio = new JRadioButton();
         routeRadio = new JRadioButton();
         staircaseRadio = new JRadioButton();
+        deleteRadio = new JRadioButton();
         bottomBar = new JToolBar();
         levelComboBox = new JComboBox(levelVector);
         addLevelButton = new JButton("Add new level");
@@ -284,6 +286,23 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
         });
         gc.gridy++;
         sidebar.add(staircaseRadio, gc);
+        
+        placementButtonGroup.add(deleteRadio);
+        deleteRadio.setText("Delete element");
+        deleteRadio.setFocusable(false);
+        deleteRadio.setHorizontalAlignment(SwingConstants.CENTER);
+        deleteRadio.setHorizontalTextPosition(SwingConstants.CENTER);
+        deleteRadio.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        deleteRadio.setAlignmentX(Component.CENTER_ALIGNMENT);
+        deleteRadio.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                elementSelected(Element.DELETE);
+            }
+            
+        });
+        gc.gridy++;
+        sidebar.add(deleteRadio, gc);
         // </editor-fold>  
         
         importImageButton.setVerticalTextPosition(AbstractButton.CENTER);
@@ -447,6 +466,9 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
          });
         int rVal = c.showOpenDialog(this);
         if (rVal == JFileChooser.APPROVE_OPTION) {
+            ImportImageDialog importDialog = new ImportImageDialog(this, controller, c.getSelectedFile().toPath().toString());
+            importDialog.setVisible(true);
+            /*
             //Open dialog to ask for dimensions
             JTextField width = new JTextField();
             JTextField height = new JTextField();
@@ -467,7 +489,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
                     JOptionPane.showMessageDialog(this, "Illegal arguments passed", "Image import error", JOptionPane.ERROR_MESSAGE);
                 }
             }
-            
+            */
             
         }
     }
@@ -535,17 +557,50 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
                 }
 
                 case POINT_OF_INTEREST: {
+                    
+                    
                     JTextField name = new JTextField();
                     JTextArea description = new JTextArea();
+                    JTextField photoPath = new JTextField();
+                    JButton browse = new JButton("Browse");
+                    browse.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            JFileChooser photoChooser = new JFileChooser();
+                            photoChooser.setFileFilter(new FileFilter() {
+
+                                public String getDescription() {
+                                    return "All supported types (*.jpg, *.jpeg, *.png)";
+                                }
+
+                                public boolean accept(File f) {
+                                    if (f.isDirectory()) {
+                                        return true;
+                                    } else {
+                                        String filename = f.getName().toLowerCase();
+                                        return filename.endsWith(".jpg") || filename.endsWith(".jpeg")
+                                                || filename.endsWith(".png");
+                                    }
+                                }
+                             });
+                            int rVal = photoChooser.showOpenDialog(MapCreator.this);
+                            if (rVal == JFileChooser.APPROVE_OPTION) {
+                                photoPath.setText(photoChooser.getSelectedFile().toPath().toString());
+                            }
+                        }
+                    });
                     final JComponent[] inputs = new JComponent[] {
                         new JLabel("Name"),
                         name,
                         new JLabel("Description"),
-                        description
+                        description,
+                        new JLabel("Photo"),
+                        photoPath,
+                        browse
                     };
                     int result = JOptionPane.showConfirmDialog(this, inputs, "Point of interest info", JOptionPane.PLAIN_MESSAGE);
                     if(result == JOptionPane.OK_OPTION) {
-                        controller.addPOI(clickPosition, name.getText(), description.getText());
+                        controller.addPOI(clickPosition, name.getText(), description.getText(), photoPath.getText());
                     }
                     break;
                 }
@@ -592,12 +647,23 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
                     dialog.setVisible(true);
                     break;
                 }
+                
+                case DELETE: {
+                    model.map.MapElement toDelete = controller.findElement(clickPosition);
+                    if(toDelete != null) {
+                        int choice = JOptionPane.showConfirmDialog(
+                                this,
+                                "Are you sure you want to delete " + toDelete + "?",
+                                "Delete element",
+                                JOptionPane.YES_NO_OPTION);
+                        if(choice == JOptionPane.YES_OPTION) {
+                            controller.deleteElement(toDelete);
+                        }
+                    }
+                    break;
+                }
             }
         } catch(NumberFormatException ex) {}
-    }
-    
-    private void changeUpperFloorComboBox() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
     @Override
@@ -625,14 +691,21 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
     // <editor-fold desc="Mouse listeners">
     @Override
     public void mouseDragged(MouseEvent e) {
-        if(mouseLocation != null) {
-            Point translation = new Point();
-            translation.x = e.getPoint().x - mouseLocation.x;
-            translation.y = e.getPoint().y - mouseLocation.y;
-            coordinateMapper.translate(translation);
+        if(SwingUtilities.isLeftMouseButton(e)) {
+            if(mouseLocation != null) {
+                Point translation = new Point();
+                translation.x = e.getPoint().x - mouseLocation.x;
+                translation.y = e.getPoint().y - mouseLocation.y;
+                coordinateMapper.translate(translation);
+            }
+        }
+        if(SwingUtilities.isMiddleMouseButton(e)) {
+            if(mouseLocation != null) {
+                int rotation = e.getPoint().x - mouseLocation.x;
+                coordinateMapper.rotate(rotation);
+            }
         }
         mouseLocation = e.getPoint();
-        //tick();
     }
 
     @Override
@@ -684,6 +757,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
     private JRadioButton pointOfInterestRadio;
     private JRadioButton routeRadio;
     private JRadioButton staircaseRadio;
+    private JRadioButton deleteRadio;
     private JComboBox levelComboBox;
     private final Vector<String> levelVector;
     private JButton addLevelButton;

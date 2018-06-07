@@ -3,7 +3,7 @@ package model.map;
 import java.io.Serializable;
 
 public class Point2d implements Serializable {
-    private double x, y;
+    public double x, y;
 
     public Point2d(){}
 
@@ -27,4 +27,11 @@ public class Point2d implements Serializable {
     public void setY(double y) {
         this.y = y;
     }
+
+    @Override
+    public String toString() {
+        return "(" + "x=" + x + ", y=" + y + ')';
+    }
+    
+    
 }

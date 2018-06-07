@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Route implements Serializable {
+public class Route extends MapElement implements Serializable {
     public enum CheckpointMissBehaviour {ENFORCE_RETURN, HOP_TO_NEXT};
     private List<Checkpoint> checkpoints;
     private String name;
@@ -52,4 +52,11 @@ public class Route implements Serializable {
         retVal = checkpoints.toArray(retVal);
         return retVal;
     }
+
+    @Override
+    public String toString() {
+        return "Route \"" + name + '\"';
+    }
+    
+    
 }

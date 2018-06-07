@@ -3,7 +3,7 @@ package model.map;
 import java.io.Serializable;
 import java.util.UUID;
 
-public class BluetoothBeacon implements Serializable {
+public class BluetoothBeacon extends MapElement implements Serializable {
 
     private Location location;
     private UUID id;
@@ -60,4 +60,11 @@ public class BluetoothBeacon implements Serializable {
     public void setTxPower(int txPower) {
         this.txPower = txPower;
     }
+
+    @Override
+    public String toString() {
+        return "BluetoothBeacon{" + "id=" + id + ", major=" + major + ", minor=" + minor + '}';
+    }
+    
+    
 }

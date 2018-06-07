@@ -3,7 +3,7 @@ package model.map;
 
 import java.io.Serializable;
 
-public class Staircase implements Serializable {
+public class Staircase extends MapElement implements Serializable {
     private Point2d Location;
     private Level upperLevel;
     private Level lowerLevel;
@@ -41,6 +41,10 @@ public class Staircase implements Serializable {
     public void setLowerLevel(Level lowerLevel) {
         this.lowerLevel = lowerLevel;
     }
-    
+
+    @Override
+    public String toString() {
+        return "Staircase{" + "upperLevel=" + upperLevel + ", lowerLevel=" + lowerLevel + '}';
+    }
     
 }

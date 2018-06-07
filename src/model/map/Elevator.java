@@ -3,7 +3,7 @@ package model.map;
 import java.io.Serializable;
 import java.util.List;
 
-public class Elevator implements Serializable {
+public class Elevator extends MapElement implements Serializable {
     private Point2d location;
     private List<Level> levels;
 
@@ -30,4 +30,11 @@ public class Elevator implements Serializable {
     public void setLevels(List<Level> levels) {
         this.levels = levels;
     }
+
+    @Override
+    public String toString() {
+        return "Elevator{" + "location=" + location + ", levels=" + levels + '}';
+    }
+    
+    
 }
