@@ -1,6 +1,8 @@
-package view;
+package com.project.dp130634.indoornavigation.view;
 
-import controller.Controller;
+import com.project.dp130634.indoornavigation.controller.Controller;
+import com.project.dp130634.indoornavigation.model.map.Level;
+import com.project.dp130634.indoornavigation.model.map.Point2d;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -11,8 +13,6 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import model.map.Level;
-import model.map.Point2d;
 
 public class StairsDialog extends JDialog {
 

@@ -1,7 +1,5 @@
-package model.map;
+package com.project.dp130634.indoornavigation.model.map;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

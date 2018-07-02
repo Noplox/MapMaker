@@ -1,6 +1,6 @@
-package view;
+package com.project.dp130634.indoornavigation.view;
 
-import controller.Controller;
+import com.project.dp130634.indoornavigation.controller.Controller;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -10,7 +10,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
-import model.map.Point2d;
+import com.project.dp130634.indoornavigation.model.map.Point2d;
 
 public class ImportImageDialog extends JDialog {
 

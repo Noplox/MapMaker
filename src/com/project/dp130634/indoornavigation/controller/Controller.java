@@ -1,5 +1,6 @@
-package controller;
+package com.project.dp130634.indoornavigation.controller;
 
+import com.project.dp130634.indoornavigation.model.Model;
 import java.awt.Image;
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,10 +16,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import model.Model;
-import model.map.*;
-import view.CoordinateMapper;
-import view.ViewInterface;
+import com.project.dp130634.indoornavigation.model.map.*;
+import com.project.dp130634.indoornavigation.view.CoordinateMapper;
+import com.project.dp130634.indoornavigation.view.ViewInterface;
 
 public class Controller {
     

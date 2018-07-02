@@ -1,4 +1,4 @@
-package model.map;
+package com.project.dp130634.indoornavigation.model.map;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -9,6 +9,7 @@ import java.io.Serializable;
 import javax.imageio.ImageIO;
 
 public class PointOfInterest extends MapElement implements Serializable {
+    static final long serialVersionUID =-3169145537364315550L;
     private Point2d location;
     private String name;
     private String description;

@@ -1,8 +1,8 @@
-package view;
+package com.project.dp130634.indoornavigation.view;
 
 import java.awt.Dimension;
 import java.awt.Point;
-import model.map.Point2d;
+import com.project.dp130634.indoornavigation.model.map.Point2d;
 
 public class CoordinateMapper {
     private static final double PIXEL_COORDINATE_RATIO = 100;  //100px = 1m

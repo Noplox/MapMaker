@@ -1,4 +1,4 @@
-package view;
+package com.project.dp130634.indoornavigation.view;
 
 import java.awt.BasicStroke;
 import java.awt.Canvas;
@@ -15,8 +15,8 @@ import java.awt.geom.AffineTransform;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JPanel;
-import model.Model;
-import model.map.*;
+import com.project.dp130634.indoornavigation.model.Model;
+import com.project.dp130634.indoornavigation.model.map.*;
 
 public class MapCanvas extends JPanel implements ComponentListener {
 
@@ -82,10 +82,6 @@ public class MapCanvas extends JPanel implements ComponentListener {
         Level.ImageContainer levelImageContainer = model.getCurrentLevel().getImage();
         if(levelImageContainer != null) {
             Point firstPoint = coordinateMapper.mapCoordinates(levelImageContainer.firstCoordinate);
-            
-            if(coordinateMapper.getRotation() == 20) {
-                System.out.println("dabeg");
-            }
             
             Point xDim = coordinateMapper.scaleLength(
                 new Point2d(Math.abs(levelImageContainer.lastCoordinate.x - levelImageContainer.firstCoordinate.x), 0));

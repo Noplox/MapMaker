@@ -1,7 +1,10 @@
-package view;
+package com.project.dp130634.indoornavigation.view;
 
-import controller.Controller;
-import controller.Controller.Element;
+import com.project.dp130634.indoornavigation.controller.Controller;
+import com.project.dp130634.indoornavigation.controller.Controller.Element;
+import com.project.dp130634.indoornavigation.model.Model;
+import com.project.dp130634.indoornavigation.model.map.Level;
+import com.project.dp130634.indoornavigation.model.map.Point2d;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -36,9 +39,6 @@ import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
-import model.Model;
-import model.map.Level;
-import model.map.Point2d;
 
 /**
  *
@@ -649,7 +649,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
                 }
                 
                 case DELETE: {
-                    model.map.MapElement toDelete = controller.findElement(clickPosition);
+                    com.project.dp130634.indoornavigation.model.map.MapElement toDelete = controller.findElement(clickPosition);
                     if(toDelete != null) {
                         int choice = JOptionPane.showConfirmDialog(
                                 this,

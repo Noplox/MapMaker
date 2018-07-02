@@ -1,4 +1,4 @@
-package model.map;
+package com.project.dp130634.indoornavigation.model.map;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -52,15 +52,7 @@ public class Level implements Serializable {
     private String name;
     //variable to store floorplan in jpg/png
     private ImageContainer image;
-/*
-    public Level(String name) {
-        this.name = name;
-        obstacles = new ArrayList<>();
-        pointsOfInterest = new ArrayList<>();
-        stairs = new ArrayList<>();
-        bluetoothBeacons = new ArrayList<>();
-    }
-*/
+
     public Level(String name, double floorHeight) {
         this.name = name;
         this.floorHeight = floorHeight;

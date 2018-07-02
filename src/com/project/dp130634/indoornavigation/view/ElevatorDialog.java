@@ -1,6 +1,6 @@
-package view;
+package com.project.dp130634.indoornavigation.view;
 
-import controller.Controller;
+import com.project.dp130634.indoornavigation.controller.Controller;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -15,8 +15,8 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
-import model.map.Level;
-import model.map.Point2d;
+import com.project.dp130634.indoornavigation.model.map.Level;
+import com.project.dp130634.indoornavigation.model.map.Point2d;
 
 public class ElevatorDialog extends JDialog {
 
