@@ -20,6 +20,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.io.File;
+import java.util.Date;
 import java.util.Vector;
 import java.util.logging.Logger;
 import javax.swing.AbstractButton;
@@ -46,7 +47,11 @@ import javax.swing.filechooser.FileFilter;
  */
 public class MapCreator extends JFrame implements ViewInterface, MouseMotionListener, MouseListener, MouseWheelListener {
     public static final String APP_NAME = "Map creator";
-    public static final int TICK_RATE = 60;
+    public static final int MAX_TICK_RATE = 300;
+    public static final int COMPASS_POSITION = 20;
+    public static final int COMPASS_RADIUS = 30;
+    public static final int[] COMPASS_NEEDLE_X = {32, 38, 35};
+    public static final int[] COMPASS_NEEDLE_Y = {35, 35, 20};
 
     private class LevelSelectListener implements ActionListener{
 
@@ -88,6 +93,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
         pointOfInterestRadio = new JRadioButton();
         routeRadio = new JRadioButton();
         staircaseRadio = new JRadioButton();
+        setOriginRadio = new JRadioButton();
         deleteRadio = new JRadioButton();
         bottomBar = new JToolBar();
         levelComboBox = new JComboBox(levelVector);
@@ -287,6 +293,23 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
         gc.gridy++;
         sidebar.add(staircaseRadio, gc);
         
+        placementButtonGroup.add(setOriginRadio);
+        setOriginRadio.setText("Set coordinate origin");
+        setOriginRadio.setFocusable(false);
+        setOriginRadio.setHorizontalAlignment(SwingConstants.CENTER);
+        setOriginRadio.setHorizontalTextPosition(SwingConstants.CENTER);
+        setOriginRadio.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        setOriginRadio.setAlignmentX(Component.CENTER_ALIGNMENT);
+        setOriginRadio.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                elementSelected(Element.SET_ORIGIN);
+            }
+            
+        });
+        gc.gridy++;
+        sidebar.add(setOriginRadio, gc);
+        
         placementButtonGroup.add(deleteRadio);
         deleteRadio.setText("Delete element");
         deleteRadio.setFocusable(false);
@@ -382,10 +405,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
     
     private void levelSelected() {
         LevelComboItem lvl = (LevelComboItem)levelComboBox.getSelectedItem();
-//        //lvl is null when the method is invoked due to clearing the comboBox when refreshing the view
-//        if(lvl != null && !controller.getSelectedLevel().getName().equals(lvl.getKey())) {
-            controller.selectLevel(lvl.getKey());
-//        }
+        controller.selectLevel(lvl.getKey());
     }
     
     private void addLevel() {
@@ -467,30 +487,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
         int rVal = c.showOpenDialog(this);
         if (rVal == JFileChooser.APPROVE_OPTION) {
             ImportImageDialog importDialog = new ImportImageDialog(this, controller, c.getSelectedFile().toPath().toString());
-            importDialog.setVisible(true);
-            /*
-            //Open dialog to ask for dimensions
-            JTextField width = new JTextField();
-            JTextField height = new JTextField();
-            final JComponent[] inputs = new JComponent[] {
-                new JLabel("Width"),
-                width,
-                new JLabel("Height"),
-                height
-            };
-            int result = JOptionPane.showConfirmDialog(this, inputs, "Input dimensions", JOptionPane.PLAIN_MESSAGE);
-            if(result == JOptionPane.OK_OPTION) {
-                try {
-                    double x = Double.parseDouble(width.getText());
-                    double y = Double.parseDouble(height.getText());
-                    controller.importImage(c.getCurrentDirectory().toString(), c.getSelectedFile().getName(), x, y);
-                    //tick();
-                } catch(NumberFormatException e) {
-                    JOptionPane.showMessageDialog(this, "Illegal arguments passed", "Image import error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-            */
-            
+            importDialog.setVisible(true);            
         }
     }
     
@@ -510,7 +507,6 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
                     JTextField uuid = new JTextField();
                     JTextField majorFld = new JTextField();
                     JTextField minorFld = new JTextField();
-                    JTextField txPower = new JTextField();
                     JTextField height = new JTextField();
                     final JComponent[] inputs = new JComponent[] {
                         new JLabel("UUID"),
@@ -519,8 +515,6 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
                         majorFld,
                         new JLabel("minor"),
                         minorFld,
-                        new JLabel("Transmission power"),
-                        txPower,
                         new JLabel("Height"),
                         height
                     };
@@ -530,8 +524,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
                             double h = Double.parseDouble(height.getText());
                             int major = Integer.parseInt(majorFld.getText());
                             int minor = Integer.parseInt(minorFld.getText());
-                            int tx = Integer.parseInt(txPower.getText());
-                            controller.addBeacon(clickPosition, uuid.getText(), major, minor, h, tx);
+                            controller.addBeacon(clickPosition, uuid.getText(), major, minor, h);
                         } catch(IllegalArgumentException e) {
                             //show error dialog
                             JOptionPane.showMessageDialog(this, "Illegal arguments passed", "Beacon creation error", JOptionPane.ERROR_MESSAGE);
@@ -560,47 +553,17 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
                     
                     
                     JTextField name = new JTextField();
-                    JTextArea description = new JTextArea();
-                    JTextField photoPath = new JTextField();
-                    JButton browse = new JButton("Browse");
-                    browse.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            JFileChooser photoChooser = new JFileChooser();
-                            photoChooser.setFileFilter(new FileFilter() {
-
-                                public String getDescription() {
-                                    return "All supported types (*.jpg, *.jpeg, *.png)";
-                                }
-
-                                public boolean accept(File f) {
-                                    if (f.isDirectory()) {
-                                        return true;
-                                    } else {
-                                        String filename = f.getName().toLowerCase();
-                                        return filename.endsWith(".jpg") || filename.endsWith(".jpeg")
-                                                || filename.endsWith(".png");
-                                    }
-                                }
-                             });
-                            int rVal = photoChooser.showOpenDialog(MapCreator.this);
-                            if (rVal == JFileChooser.APPROVE_OPTION) {
-                                photoPath.setText(photoChooser.getSelectedFile().toPath().toString());
-                            }
-                        }
-                    });
+                    JTextField contentURLField = new JTextField();
+                    
                     final JComponent[] inputs = new JComponent[] {
                         new JLabel("Name"),
                         name,
-                        new JLabel("Description"),
-                        description,
-                        new JLabel("Photo"),
-                        photoPath,
-                        browse
+                        new JLabel("Content URL"),
+                        contentURLField,
                     };
                     int result = JOptionPane.showConfirmDialog(this, inputs, "Point of interest info", JOptionPane.PLAIN_MESSAGE);
                     if(result == JOptionPane.OK_OPTION) {
-                        controller.addPOI(clickPosition, name.getText(), description.getText(), photoPath.getText());
+                        controller.addPOI(clickPosition, name.getText(), contentURLField.getText());
                     }
                     break;
                 }
@@ -648,6 +611,13 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
                     break;
                 }
                 
+                case SET_ORIGIN: {
+                    Point toTranslate = coordinateMapper.scaleLength(clickPosition);
+                    controller.setOrigin(clickPosition);
+                    coordinateMapper.translateNoRotation(toTranslate);
+                    break;
+                }
+                
                 case DELETE: {
                     com.project.dp130634.indoornavigation.model.map.MapElement toDelete = controller.findElement(clickPosition);
                     if(toDelete != null) {
@@ -691,18 +661,25 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
     // <editor-fold desc="Mouse listeners">
     @Override
     public void mouseDragged(MouseEvent e) {
-        if(SwingUtilities.isLeftMouseButton(e)) {
-            if(mouseLocation != null) {
-                Point translation = new Point();
-                translation.x = e.getPoint().x - mouseLocation.x;
-                translation.y = e.getPoint().y - mouseLocation.y;
-                coordinateMapper.translate(translation);
-            }
-        }
-        if(SwingUtilities.isMiddleMouseButton(e)) {
+        if(compassClicked) {
             if(mouseLocation != null) {
                 int rotation = e.getPoint().x - mouseLocation.x;
-                coordinateMapper.rotate(rotation);
+                controller.addCompassRotation(rotation);
+            }
+        } else {
+            if(SwingUtilities.isLeftMouseButton(e)) {
+                if(mouseLocation != null) {
+                    Point translation = new Point();
+                    translation.x = e.getPoint().x - mouseLocation.x;
+                    translation.y = e.getPoint().y - mouseLocation.y;
+                    coordinateMapper.translate(translation);
+                }
+            }
+            if(SwingUtilities.isMiddleMouseButton(e)) {
+                if(mouseLocation != null) {
+                    int rotation = e.getPoint().x - mouseLocation.x;
+                    coordinateMapper.rotate(rotation);
+                }
             }
         }
         mouseLocation = e.getPoint();
@@ -737,10 +714,19 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {}
+    public void mousePressed(MouseEvent e) {
+        Point2d clickLocation = new Point2d(e.getX(), e.getY());
+        int compassCenter = COMPASS_POSITION + (COMPASS_RADIUS / 2);
+        Point2d compassLocation = new Point2d(compassCenter, compassCenter);
+        if(CoordinateMapper.isInRadius(clickLocation, compassLocation, COMPASS_RADIUS)) {
+            compassClicked = true;
+        }
+    }
 
     @Override
-    public void mouseReleased(MouseEvent e) {}
+    public void mouseReleased(MouseEvent e) {
+        compassClicked = false;
+    }
 
     @Override
     public void mouseEntered(MouseEvent e) {}
@@ -757,6 +743,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
     private JRadioButton pointOfInterestRadio;
     private JRadioButton routeRadio;
     private JRadioButton staircaseRadio;
+    private JRadioButton setOriginRadio;
     private JRadioButton deleteRadio;
     private JComboBox levelComboBox;
     private final Vector<String> levelVector;
@@ -776,12 +763,14 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
     private final LevelSelectListener levelSelectListener;
     private final CoordinateMapper coordinateMapper;
     private Point mouseLocation;
+    private boolean compassClicked = false;
     private final Runnable ticker = new Runnable() {
         @Override
         public void run() {
             try {
+                int tickRate = MAX_TICK_RATE;
                 while(true) {
-                    Thread.sleep(1000/TICK_RATE);
+                    Thread.sleep(1000/tickRate);
                     tick();
                 }
             } catch (InterruptedException ex) {

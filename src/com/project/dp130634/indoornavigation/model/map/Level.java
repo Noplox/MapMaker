@@ -14,8 +14,11 @@ import javax.imageio.ImageIO;
 
 
 public class Level implements Serializable {
+    //Serial UIDs are specified in classes which differ from the ones in the mapCreator
+    static final long serialVersionUID =-4032048629470738669L;
     
-    public class ImageContainer implements Serializable {
+    public class ImageContainer extends MapElement implements Serializable {
+        static final long serialVersionUID =6602207808935057987L;
         public transient Image image;
         public Point2d firstCoordinate, lastCoordinate;
         
@@ -42,6 +45,11 @@ public class Level implements Serializable {
                 image = ImageIO.read(in);
             }
         }
+        
+        @Override
+        public String toString() {
+            return "the floor plan";
+        }
     }
     
     private double floorHeight; //y coordinate of the floor
@@ -50,7 +58,7 @@ public class Level implements Serializable {
     private List<Staircase> stairs;
     private List<BluetoothBeacon> bluetoothBeacons;
     private String name;
-    //variable to store floorplan in jpg/png
+    //variable to store floor plan in jpg/png
     private ImageContainer image;
 
     public Level(String name, double floorHeight) {
@@ -116,6 +124,10 @@ public class Level implements Serializable {
     
     public ImageContainer getImage() {
         return image;
+    }
+
+    public void setImage(ImageContainer image) {
+        this.image = image;
     }
     
     @Override

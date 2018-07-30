@@ -97,16 +97,12 @@ public class CoordinateMapper {
         this.translation.y += translation.y;
     }
     
+    public void translateNoRotation(Point translation) {
+        this.translation.x += translation.x;
+        this.translation.y += translation.y;
+    }
+    
     public void rotate(int degrees) {
-        // [0, 360]
-        /*
-        rotation += degrees;
-        rotation %= 360;
-        if(rotation <= 0) {
-            rotation = 360 - rotation;
-        }
-        */
-
         // [-180, 180]
         rotation += degrees;
         if(rotation >= 180) {
@@ -115,8 +111,6 @@ public class CoordinateMapper {
         if(rotation <= -180 && degrees < 0) {
             rotation = 180;
         }
-
-        System.out.println("rotation: " + rotation);
     }
     
     private CoordinateMapper() {}
@@ -128,6 +122,11 @@ public class CoordinateMapper {
         return instance;
     }
 
+    public static boolean isInRadius(Point2d location1, Point2d location2, double radius) {
+        double distance = Math.sqrt(Math.pow((location1.getX() - location2.getX()), 2) + Math.pow((location1.getY() - location2.getY()), 2));
+        return distance <= radius;
+    }
+    
     public void setCanvasSize(Point size) {
         canvasSize = size;
     }

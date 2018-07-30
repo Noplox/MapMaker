@@ -99,13 +99,13 @@ public class Model {
         }
     }
     
-    public void addPOI(Point2d clickPosition, String name, String description, Image POIImage) {
-        currentLevel.addPointOfInterest(new PointOfInterest(clickPosition, name, description, POIImage));
+    public void addPOI(Point2d clickPosition, String name, String contentURL) {
+        currentLevel.addPointOfInterest(new PointOfInterest(clickPosition, name, contentURL));
     }
     
-    public void addBeacon(Point2d clickPosition, UUID uuid, int major, int minor, double height, int txPower) {
+    public void addBeacon(Point2d clickPosition, UUID uuid, int major, int minor, double height) {
         Location beaconLocation = new Location(clickPosition.getX(), clickPosition.getY(), currentLevel.getFloorHeight() + height, 0, 0, 0, 0, 0, 0);
-        BluetoothBeacon newBeacon = new BluetoothBeacon(beaconLocation, uuid, major, minor, txPower);
+        BluetoothBeacon newBeacon = new BluetoothBeacon(beaconLocation, uuid, major, minor);
         currentLevel.addBluetoothBeacon(newBeacon);
     }
     
@@ -139,6 +139,14 @@ public class Model {
     public void setMap(Map newMap) {
         this.map = newMap;
         clearTempObjects();
+    }
+
+    public int getCompassRotation() {
+        return map.getCompassRotation();
+    }
+
+    public void setCompassRotation(int compassRotation) {
+        map.setCompassRotation(compassRotation);
     }
     
     private Map map;

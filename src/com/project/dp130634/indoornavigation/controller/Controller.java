@@ -23,7 +23,7 @@ import com.project.dp130634.indoornavigation.view.ViewInterface;
 public class Controller {
     
     public enum Element {
-        BEACON, OBSTACLE, STAIRS, ELEVATOR, POINT_OF_INTEREST, ROUTE, DELETE
+        BEACON, OBSTACLE, STAIRS, ELEVATOR, POINT_OF_INTEREST, ROUTE, SET_ORIGIN, DELETE
     };
 
     public Controller(ViewInterface view) {
@@ -119,20 +119,12 @@ public class Controller {
         view.refresh(model);
     }
     
-    public void addPOI(Point2d clickPosition, String name, String description, String path) {
-        Image POIImage = null;
-        if(!"".equals(path) && path != null) {
-            try {
-                POIImage = ImageIO.read(new File(path));
-            } catch (IOException ex) {
-                POIImage = null;
-            }
-        }
-        model.addPOI(clickPosition, name, description, POIImage);
+    public void addPOI(Point2d clickPosition, String name, String contentURL) {
+        model.addPOI(clickPosition, name, contentURL);
     }
     
-    public void addBeacon(Point2d clickPosition, String uuid, int major, int minor, double height, int txPower) {
-        model.addBeacon(clickPosition, UUID.fromString(uuid), major, minor, height, txPower);
+    public void addBeacon(Point2d clickPosition, String uuid, int major, int minor, double height) {
+        model.addBeacon(clickPosition, UUID.fromString(uuid), major, minor, height);
     }
 
     public void mouseMoved(Point2d position) {
@@ -216,6 +208,10 @@ public class Controller {
         model.addElevator(new Elevator(location, selectedLevels));
     }
 
+    /**
+     * Method finds where is the element that needs to be deleted and deletes it.
+     * @param toDelete element to find and delete
+     */
     public void deleteElement(MapElement toDelete) {
         model.getCurrentLevel().getBluetoothBeacons().remove(toDelete);
         model.getElevators().remove(toDelete);
@@ -223,6 +219,13 @@ public class Controller {
         model.getCurrentLevel().getStaircases().remove(toDelete);
         model.getRoutes().remove(toDelete);
         model.getCurrentLevel().getObstacles().remove(toDelete);
+        if(model.getCurrentLevel().getImage() == toDelete) {
+            model.getCurrentLevel().setImage(null);
+        }
+    }
+    
+    public void addCompassRotation(int rotation) {
+        model.setCompassRotation(model.getCompassRotation() + rotation);
     }
     
     public MapElement findElement(Point2d clickPosition) {
@@ -263,7 +266,75 @@ public class Controller {
             return cur;
         }
         
+        Level.ImageContainer plan = model.getCurrentLevel().getImage();
+        if(plan != null) {
+            Point2d planPoints[] = new Point2d[4];
+            planPoints[0] = plan.firstCoordinate;
+            planPoints[1] = new Point2d(plan.firstCoordinate.x, plan.lastCoordinate.y);
+            planPoints[2] = plan.lastCoordinate;
+            planPoints[3] = new Point2d(plan.lastCoordinate.x, plan.firstCoordinate.y);
+            
+            if(isInPolygon(planPoints, clickPosition)) {
+                return plan;
+            }
+        }
+        
         return null;
+    }
+    
+    /**
+     * Sets new origin for coordinate system.
+     * All elements on all floors change their coordinates, so their position relative to the new (0, 0) changes
+     * Floors other than the current need to change so elevators and staircases don't slide out
+     * @param origin coordinates of the new (0, 0);
+     */
+    public void setOrigin(Point2d origin)
+    {
+        for(Level curLevel : model.getAllLevels()) {
+            //Beacons
+            for(BluetoothBeacon curElem : curLevel.getBluetoothBeacons()) {
+                curElem.getLocation().setX(curElem.getLocation().getX() - origin.x);
+                curElem.getLocation().setY(curElem.getLocation().getY() - origin.y);
+            }
+            //POIs
+            for(PointOfInterest curElem : curLevel.getPointsOfInterest()) {
+                curElem.getLocation().x -= origin.x;
+                curElem.getLocation().y -= origin.y;
+            }
+            //Obstacles
+            for(Obstacle curElem : curLevel.getObstacles()) {
+                for(Point2d obstaclePoint : curElem.getPoints()) {
+                    obstaclePoint.x -= origin.x;
+                    obstaclePoint.y -= origin.y;
+                }
+            }
+            //Staircases
+            for(Staircase curElem : curLevel.getStaircases()) {
+                curElem.getLocation().x -= origin.x;
+                curElem.getLocation().y -= origin.y;
+            }
+            
+            //Plan
+            if(curLevel.getImage() != null) {
+                curLevel.getImage().firstCoordinate.x -= origin.x;
+                curLevel.getImage().firstCoordinate.y -= origin.y;
+                curLevel.getImage().lastCoordinate.x -= origin.x;
+                curLevel.getImage().lastCoordinate.y -= origin.y;
+            }
+        }
+        //Elevators
+        for(Elevator curElem : model.getElevators()) {
+            curElem.getLocation().x -= origin.x;
+            curElem.getLocation().y -= origin.y;
+        }
+        
+        //Routes
+        for(Route curElem : model.getRoutes()) {
+            for(Checkpoint checkpoint : curElem.getCheckpoints()) {
+                checkpoint.getLocation().x -= origin.x;
+                checkpoint.getLocation().y -= origin.y;
+            }
+        }
     }
     
     private Route findRoute(Point2d clickPosition, double detectionThreshold) {

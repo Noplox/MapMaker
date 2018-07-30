@@ -367,16 +367,15 @@ public class MapCanvas extends JPanel implements ComponentListener {
         }
         //Drawing compass
         g.setColor(Color.LIGHT_GRAY);
-        g.fillOval(20, 20, 30, 30);
-        int[] xpoints = {32, 38, 35};
-        int[] ypoints = {35, 35, 20};
+        g.fillOval(MapCreator.COMPASS_POSITION, MapCreator.COMPASS_POSITION, MapCreator.COMPASS_RADIUS, MapCreator.COMPASS_RADIUS);
+        int compassCenterXY = MapCreator.COMPASS_POSITION + (MapCreator.COMPASS_RADIUS / 2);
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.rotate(
-                Math.toRadians(coordinateMapper.getRotation()),
-                35, 35);
+                Math.toRadians(coordinateMapper.getRotation() + model.getCompassRotation()),
+                compassCenterXY, compassCenterXY);
         
         g2d.setColor(Color.RED);
-        g2d.fillPolygon(xpoints, ypoints, 3);
+        g2d.fillPolygon(MapCreator.COMPASS_NEEDLE_X, MapCreator.COMPASS_NEEDLE_Y, 3);
         
     }
     

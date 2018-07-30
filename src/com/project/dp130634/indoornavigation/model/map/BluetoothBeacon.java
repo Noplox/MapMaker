@@ -4,18 +4,18 @@ import java.io.Serializable;
 import java.util.UUID;
 
 public class BluetoothBeacon extends MapElement implements Serializable {
-
+    //Serial UIDs are specified in classes which differ from the ones in the mapCreator
+    static final long serialVersionUID =-7437707001096879816L;
+    
     private Location location;
     private UUID id;
     private int major, minor;
-    private int txPower;
 
-    public BluetoothBeacon(Location location, UUID id, int major, int minor, int txPower) {
+    public BluetoothBeacon(Location location, UUID id, int major, int minor) {
         this.location = location;
         this.id = id;
         this.major = major;
         this.minor = minor;
-        this.txPower = txPower;
     }
 
     public BluetoothBeacon() {
@@ -51,14 +51,6 @@ public class BluetoothBeacon extends MapElement implements Serializable {
 
     public void setMinor(int minor) {
         this.minor = minor;
-    }
-
-    public int getTxPower() {
-        return txPower;
-    }
-
-    public void setTxPower(int txPower) {
-        this.txPower = txPower;
     }
 
     @Override

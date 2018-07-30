@@ -9,18 +9,21 @@ public class Map implements Serializable {
     private final List<Route> routes;
     private final List<Elevator> elevators;
     private String name;
+    private int compassRotation;
 
     public Map(String name) {
         this.levels = new ArrayList<>();
         this.routes = new ArrayList<>();
         this.elevators = new ArrayList<>();
         this.name = name;
+        compassRotation = 0;
     }
 
     public Map(List<Level> levels, List<Route> routes, List<Elevator> elevators) {
         this.levels = levels;
         this.routes = routes;
         this.elevators = elevators;
+        compassRotation = 0;
     }
 
     public List<Level> getLevels() {
@@ -53,5 +56,13 @@ public class Map implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getCompassRotation() {
+        return compassRotation;
+    }
+
+    public void setCompassRotation(int compassRotation) {
+        this.compassRotation = compassRotation;
     }
 }
