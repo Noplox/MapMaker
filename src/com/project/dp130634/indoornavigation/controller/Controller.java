@@ -4,12 +4,10 @@ import com.project.dp130634.indoornavigation.model.Model;
 import java.awt.Image;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -284,8 +282,12 @@ public class Controller {
     
     /**
      * Sets new origin for coordinate system.
-     * All elements on all floors change their coordinates, so their position relative to the new (0, 0) changes
-     * Floors other than the current need to change so elevators and staircases don't slide out
+     * All elements on all floors change their coordinates, 
+     * so their position relative to the new (0, 0) changes.
+     * 
+     * Floors other than the current need to change 
+     * so elevators and staircases don't slide out
+     * 
      * @param origin coordinates of the new (0, 0);
      */
     public void setOrigin(Point2d origin)

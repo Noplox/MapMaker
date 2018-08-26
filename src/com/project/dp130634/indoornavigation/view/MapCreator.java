@@ -10,17 +10,15 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.io.File;
-import java.util.Date;
 import java.util.Vector;
 import java.util.logging.Logger;
 import javax.swing.AbstractButton;
@@ -28,13 +26,11 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
@@ -79,6 +75,7 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
         this.levelSelectListener = new LevelSelectListener();
         this.coordinateMapper = CoordinateMapper.getInstance();
         initComponents();
+        setIcon();
         newMap();
         Thread tickerThread = new Thread(ticker);
         tickerThread.start();
@@ -146,6 +143,11 @@ public class MapCreator extends JFrame implements ViewInterface, MouseMotionList
         gc.weighty = 1;
         add(bottomBar, gc);
         
+    }
+    
+    private void setIcon() {
+        java.net.URL url = ClassLoader.getSystemResource("com/project/dp130634/indoornavigation/resources/icon.png");
+        setIconImage(Toolkit.getDefaultToolkit().createImage(url));
     }
     
     private void createSidebar() {

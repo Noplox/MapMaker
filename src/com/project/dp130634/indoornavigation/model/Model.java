@@ -1,7 +1,6 @@
 package com.project.dp130634.indoornavigation.model;
 
 import java.awt.Image;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import com.project.dp130634.indoornavigation.model.map.*;

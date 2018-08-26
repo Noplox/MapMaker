@@ -1,7 +1,6 @@
 package com.project.dp130634.indoornavigation.view;
 
 import java.awt.BasicStroke;
-import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -11,7 +10,6 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.geom.AffineTransform;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JPanel;
@@ -22,7 +20,6 @@ public class MapCanvas extends JPanel implements ComponentListener {
 
     public MapCanvas(Model model, MapCreator gui) {
         this.model = model;
-        this.gui = gui;
         this.coordinateMapper = CoordinateMapper.getInstance();
         
         this.addMouseMotionListener(gui);
@@ -452,7 +449,6 @@ public class MapCanvas extends JPanel implements ComponentListener {
     }
 
     private DrawableModel drawableModel;
-    private final MapCreator gui;
     private Model model;
-    private CoordinateMapper coordinateMapper;
+    private final CoordinateMapper coordinateMapper;
 }
