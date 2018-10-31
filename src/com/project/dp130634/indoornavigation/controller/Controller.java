@@ -128,11 +128,10 @@ public class Controller {
     public void mouseMoved(Point2d position) {
         if(model.getNewObstacle() != null) {
             model.setTempObstaclePoint(position);
-            //view.tick();
         }
+        
         if(model.getNewRoute() != null) {
             model.setTempRoutePoint(position);
-            //view.tick();
         }
     }
     
@@ -142,7 +141,6 @@ public class Controller {
     
     public void finalizeRoute(Point2d clickPosition, String name) {
         model.finalizeRoute(clickPosition, name);
-        //view.tick();
     }
     
     public Level[] routeLevelFinish(Point2d clickPosition) {
@@ -193,7 +191,6 @@ public class Controller {
             throw new IllegalArgumentException("Unspecified lower and upper level for staircase");
         }
         model.getCurrentLevel().addStaircase(new Staircase(stairsPosition, upperLevel, lowerLevel));
-        //Make staircases on upper and lower level as well
         if(upperLevel != null) {
             upperLevel.addStaircase(new Staircase(stairsPosition, null, model.getCurrentLevel()));
         }
